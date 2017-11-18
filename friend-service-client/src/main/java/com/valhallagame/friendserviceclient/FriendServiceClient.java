@@ -1,16 +1,19 @@
 package com.valhallagame.friendserviceclient;
 
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
+import java.io.IOException;
 
+import com.valhallagame.common.RestCaller;
+import com.valhallagame.common.RestResponse;
 import com.valhallagame.friendserviceclient.model.InviteParameter;
 
 public class FriendServiceClient {
 	private static FriendServiceClient personServiceClient;
 
 	private String personServiceServerUrl = "http://localhost:1236";
+	private RestCaller restCaller;
 
 	private FriendServiceClient() {
+		restCaller = new RestCaller();
 	}
 
 	public static void init(String personServiceServerUrl) {
@@ -26,15 +29,13 @@ public class FriendServiceClient {
 		return personServiceClient;
 	}
 
-	public boolean sendFriendInvite(String sender, String receiver) {
-		RestTemplate restTemplate = new RestTemplate();
+	public RestResponse<String> sendFriendInvite(String sender, String receiver) {
 		try {
-			restTemplate.postForObject(personServiceServerUrl + "/v1/friend/send-request",
+			return restCaller.postCall(personServiceServerUrl + "/v1/friend/send-request",
 					new InviteParameter(sender, receiver), String.class);
-			return true;
-		} catch (RestClientException exception) {
+		} catch (IOException exception) {
 			exception.printStackTrace();
-			return false;
+			return RestResponse.errorResponse(exception);
 		}
 	}
 }

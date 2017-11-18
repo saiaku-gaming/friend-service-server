@@ -36,7 +36,7 @@ public class FriendController {
 
 		PersonServiceClient personServiceClient = PersonServiceClient.get();
 
-		Optional<Person> targetPersonOpt = personServiceClient.getPerson(input.getReceiver());
+		Optional<Person> targetPersonOpt = personServiceClient.getPerson(input.getReceiver()).getResponse();
 
 		if (!targetPersonOpt.isPresent()) {
 			return JS.message(HttpStatus.NOT_FOUND, "Could not find person with username " + input.getReceiver());
