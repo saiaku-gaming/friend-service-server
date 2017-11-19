@@ -2,6 +2,7 @@ package com.valhallagame.friendserviceclient;
 
 import java.io.IOException;
 
+import com.valhallagame.common.DefaultServicePortMappings;
 import com.valhallagame.common.RestCaller;
 import com.valhallagame.common.RestResponse;
 import com.valhallagame.friendserviceclient.model.AcceptParameter;
@@ -12,16 +13,16 @@ import com.valhallagame.friendserviceclient.model.RemoveFriendParameter;
 public class FriendServiceClient {
 	private static FriendServiceClient friendServiceClient;
 
-	private String friendServiceServerUrl = "http://localhost:1236";
+	private String friendServiceServerUrl = "http://localhost:" + DefaultServicePortMappings.FRIEND_SERVICE_PORT;
 	private RestCaller restCaller;
 
 	private FriendServiceClient() {
 		restCaller = new RestCaller();
 	}
 
-	public static void init(String personServiceServerUrl) {
+	public static void init(String friendServiceServerUrl) {
 		FriendServiceClient client = get();
-		client.friendServiceServerUrl = personServiceServerUrl;
+		client.friendServiceServerUrl = friendServiceServerUrl;
 	}
 
 	public static FriendServiceClient get() {
