@@ -10,9 +10,9 @@ import com.valhallagame.friendserviceclient.model.InviteParameter;
 import com.valhallagame.friendserviceclient.model.RemoveFriendParameter;
 
 public class FriendServiceClient {
-	private static FriendServiceClient personServiceClient;
+	private static FriendServiceClient friendServiceClient;
 
-	private String personServiceServerUrl = "http://localhost:1236";
+	private String friendServiceServerUrl = "http://localhost:1236";
 	private RestCaller restCaller;
 
 	private FriendServiceClient() {
@@ -21,20 +21,20 @@ public class FriendServiceClient {
 
 	public static void init(String personServiceServerUrl) {
 		FriendServiceClient client = get();
-		client.personServiceServerUrl = personServiceServerUrl;
+		client.friendServiceServerUrl = personServiceServerUrl;
 	}
 
 	public static FriendServiceClient get() {
-		if (personServiceClient == null) {
-			personServiceClient = new FriendServiceClient();
+		if (friendServiceClient == null) {
+			friendServiceClient = new FriendServiceClient();
 		}
 
-		return personServiceClient;
+		return friendServiceClient;
 	}
 
 	public RestResponse<String> sendFriendInvite(String sender, String receiver) {
 		try {
-			return restCaller.postCall(personServiceServerUrl + "/v1/friend/send-request",
+			return restCaller.postCall(friendServiceServerUrl + "/v1/friend/send-request",
 					new InviteParameter(sender, receiver), String.class);
 		} catch (IOException exception) {
 			exception.printStackTrace();
@@ -44,7 +44,7 @@ public class FriendServiceClient {
 
 	public RestResponse<String> acceptInvite(String accepter, String accpetee) {
 		try {
-			return restCaller.postCall(personServiceServerUrl + "/v1/friend/accept",
+			return restCaller.postCall(friendServiceServerUrl + "/v1/friend/accept",
 					new AcceptParameter(accepter, accpetee), String.class);
 		} catch (IOException exception) {
 			exception.printStackTrace();
@@ -54,7 +54,7 @@ public class FriendServiceClient {
 
 	public RestResponse<String> declineInvite(String decliner, String declinee) {
 		try {
-			return restCaller.postCall(personServiceServerUrl + "/v1/friend/decline",
+			return restCaller.postCall(friendServiceServerUrl + "/v1/friend/decline",
 					new DeclineParameter(decliner, declinee), String.class);
 		} catch (IOException exception) {
 			exception.printStackTrace();
@@ -64,7 +64,7 @@ public class FriendServiceClient {
 
 	public RestResponse<String> removeFriend(String remover, String removee) {
 		try {
-			return restCaller.postCall(personServiceServerUrl + "/v1/friend/remove-friend",
+			return restCaller.postCall(friendServiceServerUrl + "/v1/friend/remove-friend",
 					new RemoveFriendParameter(remover, removee), String.class);
 		} catch (IOException exception) {
 			exception.printStackTrace();
