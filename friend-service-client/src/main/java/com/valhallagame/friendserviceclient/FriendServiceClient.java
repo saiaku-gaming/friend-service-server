@@ -33,43 +33,23 @@ public class FriendServiceClient {
 		return friendServiceClient;
 	}
 
-	public RestResponse<String> sendFriendInvite(String sender, String receiver) {
-		try {
-			return restCaller.postCall(friendServiceServerUrl + "/v1/friend/send-request",
-					new InviteParameter(sender, receiver), String.class);
-		} catch (IOException exception) {
-			exception.printStackTrace();
-			return RestResponse.errorResponse(exception);
-		}
+	public RestResponse<String> sendFriendInvite(String sender, String receiver) throws IOException {
+		return restCaller.postCall(friendServiceServerUrl + "/v1/friend/send-request",
+				new InviteParameter(sender, receiver), String.class);
 	}
 
-	public RestResponse<String> acceptInvite(String accepter, String accpetee) {
-		try {
-			return restCaller.postCall(friendServiceServerUrl + "/v1/friend/accept",
-					new AcceptParameter(accepter, accpetee), String.class);
-		} catch (IOException exception) {
-			exception.printStackTrace();
-			return RestResponse.errorResponse(exception);
-		}
+	public RestResponse<String> acceptInvite(String accepter, String accpetee) throws IOException {
+		return restCaller.postCall(friendServiceServerUrl + "/v1/friend/accept",
+				new AcceptParameter(accepter, accpetee), String.class);
 	}
 
-	public RestResponse<String> declineInvite(String decliner, String declinee) {
-		try {
-			return restCaller.postCall(friendServiceServerUrl + "/v1/friend/decline",
-					new DeclineParameter(decliner, declinee), String.class);
-		} catch (IOException exception) {
-			exception.printStackTrace();
-			return RestResponse.errorResponse(exception);
-		}
+	public RestResponse<String> declineInvite(String decliner, String declinee) throws IOException {
+		return restCaller.postCall(friendServiceServerUrl + "/v1/friend/decline",
+				new DeclineParameter(decliner, declinee), String.class);
 	}
 
-	public RestResponse<String> removeFriend(String remover, String removee) {
-		try {
-			return restCaller.postCall(friendServiceServerUrl + "/v1/friend/remove-friend",
-					new RemoveFriendParameter(remover, removee), String.class);
-		} catch (IOException exception) {
-			exception.printStackTrace();
-			return RestResponse.errorResponse(exception);
-		}
+	public RestResponse<String> removeFriend(String remover, String removee) throws IOException {
+		return restCaller.postCall(friendServiceServerUrl + "/v1/friend/remove-friend",
+				new RemoveFriendParameter(remover, removee), String.class);
 	}
 }

@@ -1,5 +1,6 @@
 package com.valhallagame.friendserviceserver.controller;
 
+import java.io.IOException;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +36,7 @@ public class FriendController {
 
 	@RequestMapping(path = "/send-request", method = RequestMethod.POST)
 	@ResponseBody
-	public ResponseEntity<?> sendRequest(@RequestBody InviteParameter input) {
+	public ResponseEntity<?> sendRequest(@RequestBody InviteParameter input) throws IOException {
 
 		PersonServiceClient personServiceClient = PersonServiceClient.get();
 
@@ -92,7 +93,7 @@ public class FriendController {
 
 	@RequestMapping(path = "/accept", method = RequestMethod.POST)
 	@ResponseBody
-	public ResponseEntity<?> accept(@RequestBody AcceptParameter input) {
+	public ResponseEntity<?> accept(@RequestBody AcceptParameter input) throws IOException {
 
 		if (!PersonServiceClient.get().getPerson(input.getAcceptee()).isOk()) {
 			return JS.message(HttpStatus.NOT_FOUND, "Could not find person with username " + input.getAcceptee());
@@ -122,7 +123,7 @@ public class FriendController {
 
 	@RequestMapping(path = "/decline", method = RequestMethod.POST)
 	@ResponseBody
-	public ResponseEntity<?> decline(@RequestBody DeclineParameter input) {
+	public ResponseEntity<?> decline(@RequestBody DeclineParameter input) throws IOException {
 
 		if (!PersonServiceClient.get().getPerson(input.getDeclinee()).isOk()) {
 			return JS.message(HttpStatus.NOT_FOUND, "Could not find person with username " + input.getDeclinee());
@@ -149,7 +150,7 @@ public class FriendController {
 
 	@RequestMapping(path = "/remove-friend", method = RequestMethod.POST)
 	@ResponseBody
-	public ResponseEntity<?> removeFriend(@RequestBody RemoveFriendParameter input) {
+	public ResponseEntity<?> removeFriend(@RequestBody RemoveFriendParameter input) throws IOException {
 
 		if (!PersonServiceClient.get().getPerson(input.getRemovee()).isOk()) {
 			return JS.message(HttpStatus.NOT_FOUND, "Could not find person with username " + input.getRemovee());
