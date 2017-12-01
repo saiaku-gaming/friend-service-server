@@ -1,6 +1,7 @@
 package com.valhallagame.friendserviceserver.controller;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -18,8 +19,10 @@ import com.valhallagame.common.rabbitmq.NotificationMessage;
 import com.valhallagame.common.rabbitmq.RabbitMQRouting;
 import com.valhallagame.friendserviceserver.message.AcceptParameter;
 import com.valhallagame.friendserviceserver.message.DeclineParameter;
+import com.valhallagame.friendserviceserver.message.FriendsData;
 import com.valhallagame.friendserviceserver.message.InviteParameter;
 import com.valhallagame.friendserviceserver.message.RemoveFriendParameter;
+import com.valhallagame.friendserviceserver.message.UsernameParameter;
 import com.valhallagame.friendserviceserver.model.Friend;
 import com.valhallagame.friendserviceserver.model.Invite;
 import com.valhallagame.friendserviceserver.service.FriendService;
@@ -178,5 +181,15 @@ public class FriendController {
 				new NotificationMessage(input.getRemovee(), reason));
 
 		return JS.message(HttpStatus.OK, "Friend removed");
+	}
+
+	@RequestMapping(path = "/get-friends-data", method = RequestMethod.POST)
+	@ResponseBody
+	public ResponseEntity<?> getFriendsData(@RequestBody UsernameParameter input) {
+		List<Friend> friends = friendService.getFriends(input.getUsername());
+		List<Invite> sentInvites = friendService.getSentInvites(input.getUsername());
+		List<Invite> receivedInvites = friendService.getReceivedInvites(input.getUsername());
+
+		return JS.message(HttpStatus.OK, new FriendsData(friends, sentInvites, receivedInvites));
 	}
 }
