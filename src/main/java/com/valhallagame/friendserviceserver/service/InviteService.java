@@ -1,5 +1,6 @@
 package com.valhallagame.friendserviceserver.service;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,5 +25,13 @@ public class InviteService {
 
 	public Optional<Invite> getInviteFromReceiverAndSender(String receiver, String sender) {
 		return inviteRepository.findByReceiverAndSender(receiver, sender);
+	}
+
+	public List<Invite> getSentInvites(String username) {
+		return inviteRepository.findBySender(username);
+	}
+
+	public List<Invite> getReceivedInvites(String username) {
+		return inviteRepository.findByReceiver(username);
 	}
 }

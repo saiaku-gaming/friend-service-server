@@ -187,8 +187,8 @@ public class FriendController {
 	@ResponseBody
 	public ResponseEntity<?> getFriendsData(@RequestBody UsernameParameter input) {
 		List<Friend> friends = friendService.getFriends(input.getUsername());
-		List<Invite> sentInvites = friendService.getSentInvites(input.getUsername());
-		List<Invite> receivedInvites = friendService.getReceivedInvites(input.getUsername());
+		List<Invite> sentInvites = inviteService.getSentInvites(input.getUsername());
+		List<Invite> receivedInvites = inviteService.getReceivedInvites(input.getUsername());
 
 		return JS.message(HttpStatus.OK, new FriendsData(friends, sentInvites, receivedInvites));
 	}

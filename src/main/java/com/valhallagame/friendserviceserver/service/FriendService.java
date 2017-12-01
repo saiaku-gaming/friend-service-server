@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.valhallagame.friendserviceserver.model.Friend;
-import com.valhallagame.friendserviceserver.model.Invite;
 import com.valhallagame.friendserviceserver.repository.FriendRepository;
 
 @Service
@@ -32,11 +31,4 @@ public class FriendService {
 		return friendRepository.findByUsernameAndFriend(username, friend);
 	}
 
-	public List<Invite> getSentInvites(String username) {
-		return friendRepository.findBySender(username);
-	}
-
-	public List<Invite> getReceivedInvites(String username) {
-		return friendRepository.findByReceiver(username);
-	}
 }
