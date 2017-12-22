@@ -249,9 +249,9 @@ public class FriendController {
 
 	}
 	
-	@RequestMapping(path = "/get-friends-data", method = RequestMethod.POST)
+	@RequestMapping(path = "/get-friend-data", method = RequestMethod.POST)
 	@ResponseBody
-	public ResponseEntity<?> getFriendsData(@RequestBody UsernameParameter input) throws IOException {
+	public ResponseEntity<?> getFriendData(@RequestBody UsernameParameter input) throws IOException {
 		
 		List<Friend> friends = friendService.getFriends(input.getUsername());
 		
