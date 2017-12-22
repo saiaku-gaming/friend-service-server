@@ -1,6 +1,5 @@
 package com.valhallagame.friendserviceserver.config;
 
-import org.springframework.amqp.core.AnonymousQueue;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.DirectExchange;
@@ -28,8 +27,8 @@ public class RabbitMQConfig {
 
 	// Person configs
 	@Bean
-	public Queue personDeleteQueue() {
-		return new AnonymousQueue();
+	public Queue friendPersonDeleteQueue() {
+		return new Queue("friendPersonDeleteQueue");
 	}
 
 	@Bean
@@ -38,20 +37,20 @@ public class RabbitMQConfig {
 	}
 
 	@Bean
-	public Binding bindingPersonDelete(DirectExchange personExchange, Queue personDeleteQueue) {
-		return BindingBuilder.bind(personDeleteQueue).to(personExchange).with(RabbitMQRouting.Person.DELETE);
+	public Binding bindingPersonDelete(DirectExchange personExchange, Queue friendPersonDeleteQueue) {
+		return BindingBuilder.bind(friendPersonDeleteQueue).to(personExchange).with(RabbitMQRouting.Person.DELETE);
 	}
 
 	@Bean
 	public Jackson2JsonMessageConverter jacksonConverter() {
 		return new Jackson2JsonMessageConverter();
 	}
-	
+
 	@Bean
 	public SimpleRabbitListenerContainerFactory ContainerFactory() {
 		SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
 		factory.setMessageConverter(jacksonConverter());
 		return factory;
 	}
-	
+
 }
