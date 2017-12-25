@@ -28,10 +28,10 @@ public class Friend {
 	private String username;
 
 	@Column(name = "friend")
-	private String friend;
+	private String friendUsername;
 
-	public Friend(String username, String friend) {
+	public Friend(String username, String friendUsername) {
 		this.username = username;
-		this.friend = friend;
+		this.friendUsername = friendUsername;
 	}
 }

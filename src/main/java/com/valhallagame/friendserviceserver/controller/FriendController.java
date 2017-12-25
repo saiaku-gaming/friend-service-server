@@ -339,7 +339,7 @@ public class FriendController {
 	}
 
 	private Optional<FriendData> convertToFriendData(Friend friend) throws IOException {
-		String friendUsername = friend.getFriend();
+		String friendUsername = friend.getFriendUsername();
 		RestResponse<Person> personResp = personServiceClient.getPerson(friendUsername);
 		RestResponse<Character> characterResp = characterServiceClient.getSelectedCharacter(friendUsername);
 		Optional<Person> personOpt = personResp.get();
