@@ -33,7 +33,7 @@ import com.valhallagame.friendserviceclient.model.InviteData;
 import com.valhallagame.friendserviceclient.model.InvitePersonParameter;
 import com.valhallagame.friendserviceclient.model.RemoveCharacterFriendParameter;
 import com.valhallagame.friendserviceclient.model.RemovePersonFriendParameter;
-import com.valhallagame.friendserviceserver.message.UsernameParameter;
+import com.valhallagame.friendserviceclient.model.UsernameParameter;
 import com.valhallagame.friendserviceserver.model.Friend;
 import com.valhallagame.friendserviceserver.model.Invite;
 import com.valhallagame.friendserviceserver.service.FriendService;
