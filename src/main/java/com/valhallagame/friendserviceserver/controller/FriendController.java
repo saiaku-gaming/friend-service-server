@@ -69,8 +69,8 @@ public class FriendController {
 		Optional<PersonData> targetPersonOpt = personServiceClient.getPerson(input.getReceiverUsername()).getResponse();
 
 		if (!targetPersonOpt.isPresent()) {
-			return JS.message(HttpStatus.NOT_FOUND,
-					"Could not find person with username %s", input.getReceiverUsername());
+			return JS.message(HttpStatus.NOT_FOUND, "Could not find person with username %s",
+					input.getReceiverUsername());
 		}
 
 		Optional<Invite> optInvite = inviteService.getInviteFromReceiverAndSender(input.getReceiverUsername(),
@@ -104,15 +104,27 @@ public class FriendController {
 			return JS.message(HttpStatus.OK,
 					"Friend request accepted since there already was a sent request from the person");
 		} else {
+			NotificationMessage receivedMessage = new NotificationMessage(input.getReceiverUsername(),
+					FRIEND_REQUEST_RECEIVED);
+
+			RestResponse<CharacterData> selectedCharacterResponse = characterServiceClient
+					.getSelectedCharacter(input.getSenderUsername());
+
+			if (!selectedCharacterResponse.get().isPresent()) {
+				return JS.message(selectedCharacterResponse);
+			}
+
+			receivedMessage.addData("senderDisplayCharacterName",
+					selectedCharacterResponse.get().get().getDisplayCharacterName());
+
 			inviteService.saveInvite(new Invite(input.getReceiverUsername(), input.getSenderUsername()));
 
 			rabbitTemplate.convertAndSend(RabbitMQRouting.Exchange.FRIEND.name(),
-					RabbitMQRouting.Friend.RECEIVED_INVITE.name(),
-					new NotificationMessage(input.getSenderUsername(), FRIEND_REQUEST_RECEIVED));
+					RabbitMQRouting.Friend.SENT_INVITE.name(),
+					new NotificationMessage(input.getSenderUsername(), "Friend request sent"));
 
 			rabbitTemplate.convertAndSend(RabbitMQRouting.Exchange.FRIEND.name(),
-					RabbitMQRouting.Friend.RECEIVED_INVITE.name(),
-					new NotificationMessage(input.getReceiverUsername(), FRIEND_REQUEST_RECEIVED));
+					RabbitMQRouting.Friend.RECEIVED_INVITE.name(), receivedMessage);
 
 			return JS.message(HttpStatus.OK,
 					"Sent a friend request to person with username " + input.getReceiverUsername());
@@ -140,8 +152,7 @@ public class FriendController {
 	public ResponseEntity<JsonNode> acceptPersonInvite(@RequestBody AcceptPersonParameter input) throws IOException {
 
 		if (!personServiceClient.getPerson(input.getAccepteeUsername()).isOk()) {
-			return JS.message(HttpStatus.NOT_FOUND,
-					COULD_NOT_FIND_PERSON_WITH_USERNAME + input.getAccepteeUsername());
+			return JS.message(HttpStatus.NOT_FOUND, COULD_NOT_FIND_PERSON_WITH_USERNAME + input.getAccepteeUsername());
 		}
 
 		Optional<Invite> optInvite = inviteService.getInviteFromReceiverAndSender(input.getAccepterUsername(),
@@ -230,8 +241,7 @@ public class FriendController {
 			throws IOException {
 
 		if (!personServiceClient.getPerson(input.getRemoveeUsername()).isOk()) {
-			return JS.message(HttpStatus.NOT_FOUND,
-					COULD_NOT_FIND_PERSON_WITH_USERNAME + input.getRemoveeUsername());
+			return JS.message(HttpStatus.NOT_FOUND, COULD_NOT_FIND_PERSON_WITH_USERNAME + input.getRemoveeUsername());
 		}
 
 		Optional<Friend> optFriend1 = friendService.getFriend(input.getRemoverUsername(), input.getRemoveeUsername());
@@ -307,7 +317,8 @@ public class FriendController {
 		Optional<CharacterData> senderCharacterOpt = senderCharacterResp.get();
 
 		RestResponse<PersonData> receiverPersonResp = personServiceClient.getPerson(receiverUsername);
-		RestResponse<CharacterData> receiverCharacterResp = characterServiceClient.getSelectedCharacter(receiverUsername);
+		RestResponse<CharacterData> receiverCharacterResp = characterServiceClient
+				.getSelectedCharacter(receiverUsername);
 		Optional<PersonData> receiverPersonOpt = receiverPersonResp.get();
 		Optional<CharacterData> receiverCharacterOpt = receiverCharacterResp.get();
 
@@ -344,7 +355,7 @@ public class FriendController {
 		RestResponse<CharacterData> characterResp = characterServiceClient.getSelectedCharacter(friendUsername);
 		Optional<PersonData> personOpt = personResp.get();
 		Optional<CharacterData> characterOpt = characterResp.get();
-		
+
 		if (personOpt.isPresent() && characterOpt.isPresent()) {
 			PersonData person = personOpt.get();
 			CharacterData character = characterOpt.get();
