@@ -49,9 +49,11 @@ public class FriendController {
 
 	private static final String COULD_NOT_FIND_PERSON_WITH_USERNAME = "Could not find person with username ";
 
-	private static CharacterServiceClient characterServiceClient = CharacterServiceClient.get();
+	@Autowired
+	private CharacterServiceClient characterServiceClient;
 
-	private static PersonServiceClient personServiceClient = PersonServiceClient.get();
+	@Autowired
+	private PersonServiceClient personServiceClient;
 
 	@Autowired
 	private RabbitTemplate rabbitTemplate;
