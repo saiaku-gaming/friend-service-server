@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.valhallagame.common.rabbitmq.RabbitMQRouting;
+import com.valhallagame.friendserviceserver.rabbitmq.FriendConsumer;
 
 @Configuration
 public class RabbitMQConfig {
@@ -30,12 +31,33 @@ public class RabbitMQConfig {
 	public Queue friendPersonDeleteQueue() {
 		return new Queue("friendPersonDeleteQueue");
 	}
+	
+	@Bean
+	public Queue friendPersonOnlineQueue() {
+		return new Queue("friendPersonOnlineQueue");
+	}
+
+	@Bean
+	public Queue friendPersonOfflineQueue() {
+		return new Queue("friendPersonOfflineQueue");
+	}
 
 	@Bean
 	public DirectExchange personExchange() {
 		return new DirectExchange(RabbitMQRouting.Exchange.PERSON.name());
 	}
 
+	
+	@Bean
+	public Binding bindingPersonOnline(DirectExchange personExchange, Queue friendPersonOnlineQueue) {
+		return BindingBuilder.bind(friendPersonOnlineQueue).to(personExchange).with(RabbitMQRouting.Person.ONLINE);
+	}
+
+	@Bean
+	public Binding bindingPersonOffline(DirectExchange personExchange, Queue friendPersonOfflineQueue) {
+		return BindingBuilder.bind(friendPersonOfflineQueue).to(personExchange).with(RabbitMQRouting.Person.OFFLINE);
+	}
+	
 	@Bean
 	public Binding bindingPersonDelete(DirectExchange personExchange, Queue friendPersonDeleteQueue) {
 		return BindingBuilder.bind(friendPersonDeleteQueue).to(personExchange).with(RabbitMQRouting.Person.DELETE);
