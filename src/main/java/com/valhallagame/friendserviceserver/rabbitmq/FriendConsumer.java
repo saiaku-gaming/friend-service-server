@@ -36,20 +36,20 @@ public class FriendConsumer {
 	private RabbitTemplate rabbitTemplate;
 	
 	@RabbitListener(queues = "#{friendPersonDeleteQueue.name}")
-	public void receivePersonDelete(String username) {
-		List<Invite> sentInvites = inviteService.getSentInvites(username);
+	public void receivePersonDelete(NotificationMessage message) {
+		List<Invite> sentInvites = inviteService.getSentInvites(message.getUsername());
 		sentInvites.forEach(i -> inviteService.deleteInvite(i));
 		
-		List<Invite> receivedInvites = inviteService.getReceivedInvites(username);
+		List<Invite> receivedInvites = inviteService.getReceivedInvites(message.getUsername());
 		receivedInvites.forEach(i -> inviteService.deleteInvite(i));
 		
-		List<Friend> friends = friendService.getFriends(username);
+		List<Friend> friends = friendService.getFriends(message.getUsername());
 		for(Friend friend : friends) {
 			Optional<Friend> counterFriend = friendService.getFriend(friend.getFriendUsername(), friend.getUsername());
 			counterFriend.ifPresent(f -> friendService.deleteFriend(f));
 			friendService.deleteFriend(friend);
 		}
-		logger.info("deleted user: {}", username);
+		logger.info("deleted user: {}", message.getUsername());
 	}
 	
 	@RabbitListener(queues = "#{friendPersonOnlineQueue.name}")
