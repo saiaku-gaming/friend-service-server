@@ -53,15 +53,15 @@ public class FriendConsumer {
 	}
 	
 	@RabbitListener(queues = "#{friendPersonOnlineQueue.name}")
-	public void receivePersonOnline(String username) {
-		List<Friend> friends = friendService.getFriends(username);
+	public void receivePersonOnline(NotificationMessage message) {
+		List<Friend> friends = friendService.getFriends(message.getUsername());
 		for(Friend friend : friends) {
 			
-			NotificationMessage notificationMessage = new NotificationMessage(friend.getFriendUsername(), "Friend gone online " + username);
+			NotificationMessage notificationMessage = new NotificationMessage(friend.getFriendUsername(), "Friend gone online " + message.getUsername());
 			
 			CharacterServiceClient characterServiceClient = CharacterServiceClient.get();
 			try {
-				RestResponse<CharacterData> characterResp = characterServiceClient.getCharacterWithoutOwnerValidation(username);
+				RestResponse<CharacterData> characterResp = characterServiceClient.getCharacterWithoutOwnerValidation(message.getUsername());
 				Optional<CharacterData> characterOpt = characterResp.get();
 				if(characterOpt.isPresent()){
 					
@@ -75,19 +75,19 @@ public class FriendConsumer {
 			rabbitTemplate.convertAndSend(RabbitMQRouting.Exchange.FRIEND.name(), RabbitMQRouting.Friend.ONLINE.name(),
 					notificationMessage);
 		}
-		logger.info("User is online: {}", username);
+		logger.info("User is online: {}", message.getUsername());
 	}
 	
 	@RabbitListener(queues = "#{friendPersonOfflineQueue.name}")
-	public void receivePersonOffline(String username) {
-		List<Friend> friends = friendService.getFriends(username);
+	public void receivePersonOffline(NotificationMessage message) {
+		List<Friend> friends = friendService.getFriends(message.getUsername());
 		for(Friend friend : friends) {
 			
-			NotificationMessage notificationMessage = new NotificationMessage(friend.getFriendUsername(), "Friend gone offline " + username);
+			NotificationMessage notificationMessage = new NotificationMessage(friend.getFriendUsername(), "Friend gone offline " + message.getUsername());
 			
 			CharacterServiceClient characterServiceClient = CharacterServiceClient.get();
 			try {
-				RestResponse<CharacterData> characterResp = characterServiceClient.getCharacterWithoutOwnerValidation(username);
+				RestResponse<CharacterData> characterResp = characterServiceClient.getCharacterWithoutOwnerValidation(message.getUsername());
 				Optional<CharacterData> characterOpt = characterResp.get();
 				if(characterOpt.isPresent()){
 					
@@ -101,6 +101,6 @@ public class FriendConsumer {
 			rabbitTemplate.convertAndSend(RabbitMQRouting.Exchange.FRIEND.name(), RabbitMQRouting.Friend.OFFLINE.name(),
 					notificationMessage);
 		}
-		logger.info("User is offline: {}", username);
+		logger.info("User is offline: {}", message.getUsername());
 	}
 }
