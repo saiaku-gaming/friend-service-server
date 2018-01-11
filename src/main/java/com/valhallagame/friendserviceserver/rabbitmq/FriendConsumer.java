@@ -25,79 +25,84 @@ import com.valhallagame.friendserviceserver.service.InviteService;
 public class FriendConsumer {
 
 	private static final Logger logger = LoggerFactory.getLogger(FriendConsumer.class);
-	
+
 	@Autowired
 	FriendService friendService;
-	
+
 	@Autowired
 	InviteService inviteService;
-	
+
+	@Autowired
+	CharacterServiceClient characterServiceClient;
+
 	@Autowired
 	private RabbitTemplate rabbitTemplate;
-	
+
 	@RabbitListener(queues = "#{friendPersonDeleteQueue.name}")
 	public void receivePersonDelete(NotificationMessage message) {
 		List<Invite> sentInvites = inviteService.getSentInvites(message.getUsername());
 		sentInvites.forEach(i -> inviteService.deleteInvite(i));
-		
+
 		List<Invite> receivedInvites = inviteService.getReceivedInvites(message.getUsername());
 		receivedInvites.forEach(i -> inviteService.deleteInvite(i));
-		
+
 		List<Friend> friends = friendService.getFriends(message.getUsername());
-		for(Friend friend : friends) {
+		for (Friend friend : friends) {
 			Optional<Friend> counterFriend = friendService.getFriend(friend.getFriendUsername(), friend.getUsername());
 			counterFriend.ifPresent(f -> friendService.deleteFriend(f));
 			friendService.deleteFriend(friend);
 		}
 		logger.info("deleted user: {}", message.getUsername());
 	}
-	
+
 	@RabbitListener(queues = "#{friendPersonOnlineQueue.name}")
 	public void receivePersonOnline(NotificationMessage message) {
 		List<Friend> friends = friendService.getFriends(message.getUsername());
-		for(Friend friend : friends) {
-			
-			NotificationMessage notificationMessage = new NotificationMessage(friend.getFriendUsername(), "Friend gone online " + message.getUsername());
-			
-			CharacterServiceClient characterServiceClient = CharacterServiceClient.get();
+		for (Friend friend : friends) {
+
+			NotificationMessage notificationMessage = new NotificationMessage(friend.getFriendUsername(),
+					"Friend gone online " + message.getUsername());
+
 			try {
-				RestResponse<CharacterData> characterResp = characterServiceClient.getCharacterWithoutOwnerValidation(message.getUsername());
+				RestResponse<CharacterData> characterResp = characterServiceClient
+						.getCharacterWithoutOwnerValidation(message.getUsername());
 				Optional<CharacterData> characterOpt = characterResp.get();
-				if(characterOpt.isPresent()){
-					
-					notificationMessage.addData("displayCharacterName", characterOpt.get().getDisplayCharacterName());	
+				if (characterOpt.isPresent()) {
+
+					notificationMessage.addData("displayCharacterName", characterOpt.get().getDisplayCharacterName());
 				}
 			} catch (IOException e) {
 				logger.error("Could not get character", e);
 				notificationMessage.addData("displayCharacterName", "ERROR");
 			}
-			
+
 			rabbitTemplate.convertAndSend(RabbitMQRouting.Exchange.FRIEND.name(), RabbitMQRouting.Friend.ONLINE.name(),
 					notificationMessage);
 		}
 		logger.info("User is online: {}", message.getUsername());
 	}
-	
+
 	@RabbitListener(queues = "#{friendPersonOfflineQueue.name}")
 	public void receivePersonOffline(NotificationMessage message) {
 		List<Friend> friends = friendService.getFriends(message.getUsername());
-		for(Friend friend : friends) {
-			
-			NotificationMessage notificationMessage = new NotificationMessage(friend.getFriendUsername(), "Friend gone offline " + message.getUsername());
-			
-			CharacterServiceClient characterServiceClient = CharacterServiceClient.get();
+		for (Friend friend : friends) {
+
+			NotificationMessage notificationMessage = new NotificationMessage(friend.getFriendUsername(),
+					"Friend gone offline " + message.getUsername());
+
 			try {
-				RestResponse<CharacterData> characterResp = characterServiceClient.getCharacterWithoutOwnerValidation(message.getUsername());
+				RestResponse<CharacterData> characterResp = characterServiceClient
+						.getCharacterWithoutOwnerValidation(message.getUsername());
 				Optional<CharacterData> characterOpt = characterResp.get();
-				if(characterOpt.isPresent()){
-					
-					notificationMessage.addData("displayCharacterName", characterOpt.get().getDisplayCharacterName());	
+				if (characterOpt.isPresent()) {
+
+					notificationMessage.addData("displayCharacterName", characterOpt.get().getDisplayCharacterName());
 				}
 			} catch (IOException e) {
 				logger.error("Could not get character", e);
 				notificationMessage.addData("displayCharacterName", "ERROR");
 			}
-			
+
 			rabbitTemplate.convertAndSend(RabbitMQRouting.Exchange.FRIEND.name(), RabbitMQRouting.Friend.OFFLINE.name(),
 					notificationMessage);
 		}
