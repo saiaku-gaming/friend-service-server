@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import javax.validation.Valid;
+
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -66,7 +68,8 @@ public class FriendController {
 
 	@RequestMapping(path = "/send-person-invite", method = RequestMethod.POST)
 	@ResponseBody
-	public ResponseEntity<JsonNode> sendPersonInvite(@RequestBody InvitePersonParameter input) throws IOException {
+	public ResponseEntity<JsonNode> sendPersonInvite(@Valid @RequestBody InvitePersonParameter input)
+			throws IOException {
 
 		Optional<PersonData> targetPersonOpt = personServiceClient.getPerson(input.getReceiverUsername()).getResponse();
 
@@ -135,7 +138,7 @@ public class FriendController {
 
 	@RequestMapping(path = "/send-character-invite", method = RequestMethod.POST)
 	@ResponseBody
-	public ResponseEntity<JsonNode> sendCharacterInvite(@RequestBody InviteCharacterParameter input)
+	public ResponseEntity<JsonNode> sendCharacterInvite(@Valid @RequestBody InviteCharacterParameter input)
 			throws IOException {
 		RestResponse<CharacterData> charResp = characterServiceClient
 				.getCharacterWithoutOwnerValidation(input.getReceiverCharacter());
@@ -151,7 +154,8 @@ public class FriendController {
 
 	@RequestMapping(path = "/accept-person-invite", method = RequestMethod.POST)
 	@ResponseBody
-	public ResponseEntity<JsonNode> acceptPersonInvite(@RequestBody AcceptPersonParameter input) throws IOException {
+	public ResponseEntity<JsonNode> acceptPersonInvite(@Valid @RequestBody AcceptPersonParameter input)
+			throws IOException {
 
 		if (!personServiceClient.getPerson(input.getAccepteeUsername()).isOk()) {
 			return JS.message(HttpStatus.NOT_FOUND, COULD_NOT_FIND_PERSON_WITH_USERNAME + input.getAccepteeUsername());
@@ -180,7 +184,7 @@ public class FriendController {
 
 	@RequestMapping(path = "/accept-character-invite", method = RequestMethod.POST)
 	@ResponseBody
-	public ResponseEntity<JsonNode> acceptCharacterInvite(@RequestBody AcceptCharacterParameter input)
+	public ResponseEntity<JsonNode> acceptCharacterInvite(@Valid @RequestBody AcceptCharacterParameter input)
 			throws IOException {
 		RestResponse<CharacterData> charResp = characterServiceClient
 				.getCharacterWithoutOwnerValidation(input.getAccepteeCharacterName());
@@ -196,7 +200,8 @@ public class FriendController {
 
 	@RequestMapping(path = "/decline-person-invite", method = RequestMethod.POST)
 	@ResponseBody
-	public ResponseEntity<JsonNode> declinePersonInvite(@RequestBody DeclinePersonParameter input) throws IOException {
+	public ResponseEntity<JsonNode> declinePersonInvite(@Valid @RequestBody DeclinePersonParameter input)
+			throws IOException {
 
 		if (!personServiceClient.getPerson(input.getDeclinee()).isOk()) {
 			return JS.message(HttpStatus.NOT_FOUND, COULD_NOT_FIND_PERSON_WITH_USERNAME + input.getDeclinee());
@@ -223,7 +228,7 @@ public class FriendController {
 
 	@RequestMapping(path = "/decline-character-invite", method = RequestMethod.POST)
 	@ResponseBody
-	public ResponseEntity<JsonNode> declineCharacterInvite(@RequestBody DeclineCharacterParameter input)
+	public ResponseEntity<JsonNode> declineCharacterInvite(@Valid @RequestBody DeclineCharacterParameter input)
 			throws IOException {
 		RestResponse<CharacterData> charResp = characterServiceClient
 				.getCharacterWithoutOwnerValidation(input.getDeclineeCharacterName());
@@ -239,7 +244,7 @@ public class FriendController {
 
 	@RequestMapping(path = "/remove-person-friend", method = RequestMethod.POST)
 	@ResponseBody
-	public ResponseEntity<JsonNode> removePersonFriend(@RequestBody RemovePersonFriendParameter input)
+	public ResponseEntity<JsonNode> removePersonFriend(@Valid @RequestBody RemovePersonFriendParameter input)
 			throws IOException {
 
 		if (!personServiceClient.getPerson(input.getRemoveeUsername()).isOk()) {
@@ -267,7 +272,7 @@ public class FriendController {
 
 	@RequestMapping(path = "/remove-character-friend", method = RequestMethod.POST)
 	@ResponseBody
-	public ResponseEntity<JsonNode> removeCharacterFriend(@RequestBody RemoveCharacterFriendParameter input)
+	public ResponseEntity<JsonNode> removeCharacterFriend(@Valid @RequestBody RemoveCharacterFriendParameter input)
 			throws IOException {
 		RestResponse<CharacterData> charResp = characterServiceClient
 				.getCharacterWithoutOwnerValidation(input.getRemoveeCharacterName());
@@ -284,7 +289,7 @@ public class FriendController {
 
 	@RequestMapping(path = "/get-friend-data", method = RequestMethod.POST)
 	@ResponseBody
-	public ResponseEntity<JsonNode> getFriendData(@RequestBody UsernameParameter input) throws IOException {
+	public ResponseEntity<JsonNode> getFriendData(@Valid @RequestBody UsernameParameter input) throws IOException {
 
 		List<Friend> friends = friendService.getFriends(input.getUsername());
 
