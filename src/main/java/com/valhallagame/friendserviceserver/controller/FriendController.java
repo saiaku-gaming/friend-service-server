@@ -24,15 +24,15 @@ import com.valhallagame.common.JS;
 import com.valhallagame.common.RestResponse;
 import com.valhallagame.common.rabbitmq.NotificationMessage;
 import com.valhallagame.common.rabbitmq.RabbitMQRouting;
-import com.valhallagame.friendserviceclient.message.AcceptCharacterParameter;
-import com.valhallagame.friendserviceclient.message.AcceptPersonParameter;
+import com.valhallagame.friendserviceclient.message.AcceptCharacterInviteParameter;
+import com.valhallagame.friendserviceclient.message.AcceptPersonInviteParameter;
 import com.valhallagame.friendserviceclient.message.DeclineCharacterParameter;
-import com.valhallagame.friendserviceclient.message.DeclinePersonParameter;
+import com.valhallagame.friendserviceclient.message.DeclinePersonInviteParameter;
+import com.valhallagame.friendserviceclient.message.GetFriendDataParameter;
 import com.valhallagame.friendserviceclient.message.InviteCharacterParameter;
 import com.valhallagame.friendserviceclient.message.InvitePersonParameter;
 import com.valhallagame.friendserviceclient.message.RemoveCharacterFriendParameter;
 import com.valhallagame.friendserviceclient.message.RemovePersonFriendParameter;
-import com.valhallagame.friendserviceclient.message.UsernameParameter;
 import com.valhallagame.friendserviceclient.model.FriendData;
 import com.valhallagame.friendserviceclient.model.FriendsData;
 import com.valhallagame.friendserviceclient.model.InviteData;
@@ -71,68 +71,68 @@ public class FriendController {
 	public ResponseEntity<JsonNode> sendPersonInvite(@Valid @RequestBody InvitePersonParameter input)
 			throws IOException {
 
-		Optional<PersonData> targetPersonOpt = personServiceClient.getPerson(input.getReceiverUsername()).getResponse();
+		Optional<PersonData> targetPersonOpt = personServiceClient.getPerson(input.getTargetUsername()).getResponse();
 
 		if (!targetPersonOpt.isPresent()) {
 			return JS.message(HttpStatus.NOT_FOUND, "Could not find person with username %s",
-					input.getReceiverUsername());
+					input.getTargetUsername());
 		}
 
-		Optional<Invite> optInvite = inviteService.getInviteFromReceiverAndSender(input.getReceiverUsername(),
-				input.getSenderUsername());
+		Optional<Invite> optInvite = inviteService.getInviteFromReceiverAndSender(input.getTargetUsername(),
+				input.getUsername());
 
 		if (optInvite.isPresent()) {
 			return JS.message(HttpStatus.CONFLICT, "The person has already received a friend request from this user");
 		}
 
-		Optional<Friend> optFriend = friendService.getFriend(input.getReceiverUsername(), input.getSenderUsername());
+		Optional<Friend> optFriend = friendService.getFriend(input.getTargetUsername(), input.getUsername());
 
 		if (optFriend.isPresent()) {
 			return JS.message(HttpStatus.CONFLICT, "The person is already the users friend");
 		}
 
-		Optional<Invite> optAlreadyInvited = inviteService.getInviteFromReceiverAndSender(input.getSenderUsername(),
-				input.getReceiverUsername());
+		Optional<Invite> optAlreadyInvited = inviteService.getInviteFromReceiverAndSender(input.getUsername(),
+				input.getTargetUsername());
 
 		if (optAlreadyInvited.isPresent()) {
 			inviteService.deleteInvite(optAlreadyInvited.get());
 
-			friendService.saveFriend(new Friend(input.getReceiverUsername(), input.getSenderUsername()));
-			friendService.saveFriend(new Friend(input.getSenderUsername(), input.getReceiverUsername()));
+			friendService.saveFriend(new Friend(input.getTargetUsername(), input.getUsername()));
+			friendService.saveFriend(new Friend(input.getUsername(), input.getTargetUsername()));
 
 			rabbitTemplate.convertAndSend(RabbitMQRouting.Exchange.FRIEND.name(), RabbitMQRouting.Friend.ADD.name(),
-					new NotificationMessage(input.getSenderUsername(), FRIEND_REQUEST_RECEIVED));
+					new NotificationMessage(input.getUsername(), FRIEND_REQUEST_RECEIVED));
 
 			rabbitTemplate.convertAndSend(RabbitMQRouting.Exchange.FRIEND.name(), RabbitMQRouting.Friend.ADD.name(),
-					new NotificationMessage(input.getReceiverUsername(), FRIEND_REQUEST_RECEIVED));
+					new NotificationMessage(input.getTargetUsername(), FRIEND_REQUEST_RECEIVED));
 
 			return JS.message(HttpStatus.OK,
 					"Friend request accepted since there already was a sent request from the person");
 		} else {
-			NotificationMessage receivedMessage = new NotificationMessage(input.getReceiverUsername(),
+			NotificationMessage receivedMessage = new NotificationMessage(input.getTargetUsername(),
 					FRIEND_REQUEST_RECEIVED);
 
 			RestResponse<CharacterData> selectedCharacterResponse = characterServiceClient
-					.getSelectedCharacter(input.getSenderUsername());
-
-			if (!selectedCharacterResponse.get().isPresent()) {
+					.getSelectedCharacter(input.getUsername());
+			Optional<CharacterData> characterOpt = selectedCharacterResponse.get();
+			if (!characterOpt.isPresent()) {
 				return JS.message(selectedCharacterResponse);
 			}
-
+			
 			receivedMessage.addData("senderDisplayCharacterName",
-					selectedCharacterResponse.get().get().getDisplayCharacterName());
+					characterOpt.get().getDisplayCharacterName());
 
-			inviteService.saveInvite(new Invite(input.getReceiverUsername(), input.getSenderUsername()));
+			inviteService.saveInvite(new Invite(input.getTargetUsername(), input.getUsername()));
 
 			rabbitTemplate.convertAndSend(RabbitMQRouting.Exchange.FRIEND.name(),
 					RabbitMQRouting.Friend.SENT_INVITE.name(),
-					new NotificationMessage(input.getSenderUsername(), "Friend request sent"));
+					new NotificationMessage(input.getUsername(), "Friend request sent"));
 
 			rabbitTemplate.convertAndSend(RabbitMQRouting.Exchange.FRIEND.name(),
 					RabbitMQRouting.Friend.RECEIVED_INVITE.name(), receivedMessage);
 
 			return JS.message(HttpStatus.OK,
-					"Sent a friend request to person with username " + input.getReceiverUsername());
+					"Sent a friend request to person with username " + input.getTargetUsername());
 		}
 	}
 
@@ -141,12 +141,12 @@ public class FriendController {
 	public ResponseEntity<JsonNode> sendCharacterInvite(@Valid @RequestBody InviteCharacterParameter input)
 			throws IOException {
 		RestResponse<CharacterData> charResp = characterServiceClient
-				.getCharacterWithoutOwnerValidation(input.getReceiverCharacter());
+				.getCharacter(input.getTargetCharacterName());
 		Optional<CharacterData> charOpt = charResp.get();
 		if (charOpt.isPresent()) {
 			CharacterData character = charOpt.get();
 			String ownerUsername = character.getOwnerUsername();
-			return sendPersonInvite(new InvitePersonParameter(input.getSenderUsername(), ownerUsername));
+			return sendPersonInvite(new InvitePersonParameter(input.getUsername(), ownerUsername));
 		} else {
 			return JS.message(charResp);
 		}
@@ -154,15 +154,15 @@ public class FriendController {
 
 	@RequestMapping(path = "/accept-person-invite", method = RequestMethod.POST)
 	@ResponseBody
-	public ResponseEntity<JsonNode> acceptPersonInvite(@Valid @RequestBody AcceptPersonParameter input)
+	public ResponseEntity<JsonNode> acceptPersonInvite(@Valid @RequestBody AcceptPersonInviteParameter input)
 			throws IOException {
 
-		if (!personServiceClient.getPerson(input.getAccepteeUsername()).isOk()) {
-			return JS.message(HttpStatus.NOT_FOUND, COULD_NOT_FIND_PERSON_WITH_USERNAME + input.getAccepteeUsername());
+		if (!personServiceClient.getPerson(input.getTargetUsername()).isOk()) {
+			return JS.message(HttpStatus.NOT_FOUND, COULD_NOT_FIND_PERSON_WITH_USERNAME + input.getTargetUsername());
 		}
 
-		Optional<Invite> optInvite = inviteService.getInviteFromReceiverAndSender(input.getAccepterUsername(),
-				input.getAccepteeUsername());
+		Optional<Invite> optInvite = inviteService.getInviteFromReceiverAndSender(input.getUsername(),
+				input.getTargetUsername());
 
 		if (!optInvite.isPresent()) {
 			return JS.message(HttpStatus.NOT_FOUND, "Could not find a friend invite from the person");
@@ -170,29 +170,29 @@ public class FriendController {
 
 		inviteService.deleteInvite(optInvite.get());
 
-		friendService.saveFriend(new Friend(input.getAccepteeUsername(), input.getAccepterUsername()));
-		friendService.saveFriend(new Friend(input.getAccepterUsername(), input.getAccepteeUsername()));
+		friendService.saveFriend(new Friend(input.getTargetUsername(), input.getUsername()));
+		friendService.saveFriend(new Friend(input.getUsername(), input.getTargetUsername()));
 
 		rabbitTemplate.convertAndSend(RabbitMQRouting.Exchange.FRIEND.name(), RabbitMQRouting.Friend.ADD.name(),
-				new NotificationMessage(input.getAccepterUsername(), "Accepted friend request"));
+				new NotificationMessage(input.getUsername(), "Accepted friend request"));
 
 		rabbitTemplate.convertAndSend(RabbitMQRouting.Exchange.FRIEND.name(), RabbitMQRouting.Friend.ADD.name(),
-				new NotificationMessage(input.getAccepteeUsername(), "Accepted friend request"));
+				new NotificationMessage(input.getTargetUsername(), "Accepted friend request"));
 
 		return JS.message(HttpStatus.OK, "Friend request accepted");
 	}
 
 	@RequestMapping(path = "/accept-character-invite", method = RequestMethod.POST)
 	@ResponseBody
-	public ResponseEntity<JsonNode> acceptCharacterInvite(@Valid @RequestBody AcceptCharacterParameter input)
+	public ResponseEntity<JsonNode> acceptCharacterInvite(@Valid @RequestBody AcceptCharacterInviteParameter input)
 			throws IOException {
 		RestResponse<CharacterData> charResp = characterServiceClient
-				.getCharacterWithoutOwnerValidation(input.getAccepteeCharacterName());
+				.getCharacter(input.getTargetCharacterName());
 		Optional<CharacterData> characterOpt = charResp.get();
 		if (characterOpt.isPresent()) {
 			CharacterData character = characterOpt.get();
 			String ownerUsername = character.getOwnerUsername();
-			return acceptPersonInvite(new AcceptPersonParameter(input.getAccepterUsername(), ownerUsername));
+			return acceptPersonInvite(new AcceptPersonInviteParameter(input.getUsername(), ownerUsername));
 		} else {
 			return JS.message(charResp);
 		}
@@ -200,15 +200,15 @@ public class FriendController {
 
 	@RequestMapping(path = "/decline-person-invite", method = RequestMethod.POST)
 	@ResponseBody
-	public ResponseEntity<JsonNode> declinePersonInvite(@Valid @RequestBody DeclinePersonParameter input)
+	public ResponseEntity<JsonNode> declinePersonInvite(@Valid @RequestBody DeclinePersonInviteParameter input)
 			throws IOException {
 
-		if (!personServiceClient.getPerson(input.getDeclinee()).isOk()) {
-			return JS.message(HttpStatus.NOT_FOUND, COULD_NOT_FIND_PERSON_WITH_USERNAME + input.getDeclinee());
+		if (!personServiceClient.getPerson(input.getTargetUsername()).isOk()) {
+			return JS.message(HttpStatus.NOT_FOUND, COULD_NOT_FIND_PERSON_WITH_USERNAME + input.getTargetUsername());
 		}
 
-		Optional<Invite> optInvite = inviteService.getInviteFromReceiverAndSender(input.getDecliner(),
-				input.getDeclinee());
+		Optional<Invite> optInvite = inviteService.getInviteFromReceiverAndSender(input.getUsername(),
+				input.getTargetUsername());
 
 		if (!optInvite.isPresent()) {
 			return JS.message(HttpStatus.NOT_FOUND, "Could not find a friend request from the person");
@@ -218,10 +218,10 @@ public class FriendController {
 
 		String reason = "Declined friend request";
 		rabbitTemplate.convertAndSend(RabbitMQRouting.Exchange.FRIEND.name(),
-				RabbitMQRouting.Friend.DECLINE_INVITE.name(), new NotificationMessage(input.getDecliner(), reason));
+				RabbitMQRouting.Friend.DECLINE_INVITE.name(), new NotificationMessage(input.getUsername(), reason));
 
 		rabbitTemplate.convertAndSend(RabbitMQRouting.Exchange.FRIEND.name(),
-				RabbitMQRouting.Friend.DECLINE_INVITE.name(), new NotificationMessage(input.getDeclinee(), reason));
+				RabbitMQRouting.Friend.DECLINE_INVITE.name(), new NotificationMessage(input.getTargetUsername(), reason));
 
 		return JS.message(HttpStatus.OK, "Friend request declined");
 	}
@@ -231,12 +231,12 @@ public class FriendController {
 	public ResponseEntity<JsonNode> declineCharacterInvite(@Valid @RequestBody DeclineCharacterParameter input)
 			throws IOException {
 		RestResponse<CharacterData> charResp = characterServiceClient
-				.getCharacterWithoutOwnerValidation(input.getDeclineeCharacterName());
+				.getCharacter(input.getTargetCharacterName());
 		Optional<CharacterData> charOpt = charResp.get();
 		if (charOpt.isPresent()) {
 			CharacterData character = charOpt.get();
 			String ownerUsername = character.getOwnerUsername();
-			return declinePersonInvite(new DeclinePersonParameter(input.getDeclinerUsername(), ownerUsername));
+			return declinePersonInvite(new DeclinePersonInviteParameter(input.getUsername(), ownerUsername));
 		} else {
 			return JS.message(charResp);
 		}
@@ -247,12 +247,12 @@ public class FriendController {
 	public ResponseEntity<JsonNode> removePersonFriend(@Valid @RequestBody RemovePersonFriendParameter input)
 			throws IOException {
 
-		if (!personServiceClient.getPerson(input.getRemoveeUsername()).isOk()) {
-			return JS.message(HttpStatus.NOT_FOUND, COULD_NOT_FIND_PERSON_WITH_USERNAME + input.getRemoveeUsername());
+		if (!personServiceClient.getPerson(input.getTargetUsername()).isOk()) {
+			return JS.message(HttpStatus.NOT_FOUND, COULD_NOT_FIND_PERSON_WITH_USERNAME + input.getTargetUsername());
 		}
 
-		Optional<Friend> optFriend1 = friendService.getFriend(input.getRemoverUsername(), input.getRemoveeUsername());
-		Optional<Friend> optFriend2 = friendService.getFriend(input.getRemoveeUsername(), input.getRemoverUsername());
+		Optional<Friend> optFriend1 = friendService.getFriend(input.getUsername(), input.getTargetUsername());
+		Optional<Friend> optFriend2 = friendService.getFriend(input.getTargetUsername(), input.getUsername());
 		if (!optFriend1.isPresent() || !optFriend2.isPresent()) {
 			return JS.message(HttpStatus.NOT_FOUND, "The user is not a friend with that person");
 		}
@@ -262,10 +262,10 @@ public class FriendController {
 
 		String reason = "Unfriend request";
 		rabbitTemplate.convertAndSend(RabbitMQRouting.Exchange.FRIEND.name(), RabbitMQRouting.Friend.REMOVE.name(),
-				new NotificationMessage(input.getRemoverUsername(), reason));
+				new NotificationMessage(input.getUsername(), reason));
 
 		rabbitTemplate.convertAndSend(RabbitMQRouting.Exchange.FRIEND.name(), RabbitMQRouting.Friend.REMOVE.name(),
-				new NotificationMessage(input.getRemoveeUsername(), reason));
+				new NotificationMessage(input.getTargetUsername(), reason));
 
 		return JS.message(HttpStatus.OK, "Friend removed");
 	}
@@ -275,12 +275,12 @@ public class FriendController {
 	public ResponseEntity<JsonNode> removeCharacterFriend(@Valid @RequestBody RemoveCharacterFriendParameter input)
 			throws IOException {
 		RestResponse<CharacterData> charResp = characterServiceClient
-				.getCharacterWithoutOwnerValidation(input.getRemoveeCharacterName());
+				.getCharacter(input.getTargetCharacterName());
 		Optional<CharacterData> characterOpt = charResp.get();
 		if (characterOpt.isPresent()) {
 			CharacterData character = characterOpt.get();
 			String ownerUsername = character.getOwnerUsername();
-			return removePersonFriend(new RemovePersonFriendParameter(input.getRemoverUsername(), ownerUsername));
+			return removePersonFriend(new RemovePersonFriendParameter(input.getUsername(), ownerUsername));
 		} else {
 			return JS.message(charResp);
 		}
@@ -289,7 +289,7 @@ public class FriendController {
 
 	@RequestMapping(path = "/get-friend-data", method = RequestMethod.POST)
 	@ResponseBody
-	public ResponseEntity<JsonNode> getFriendData(@Valid @RequestBody UsernameParameter input) throws IOException {
+	public ResponseEntity<JsonNode> getFriendData(@Valid @RequestBody GetFriendDataParameter input) throws IOException {
 
 		List<Friend> friends = friendService.getFriends(input.getUsername());
 

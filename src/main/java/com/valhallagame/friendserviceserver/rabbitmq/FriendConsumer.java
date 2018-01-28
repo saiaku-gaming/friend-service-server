@@ -65,7 +65,7 @@ public class FriendConsumer {
 
 			try {
 				RestResponse<CharacterData> characterResp = characterServiceClient
-						.getCharacterWithoutOwnerValidation(message.getUsername());
+						.getCharacter(message.getUsername());
 				Optional<CharacterData> characterOpt = characterResp.get();
 				if (characterOpt.isPresent()) {
 
@@ -92,7 +92,7 @@ public class FriendConsumer {
 
 			try {
 				RestResponse<CharacterData> characterResp = characterServiceClient
-						.getCharacterWithoutOwnerValidation(message.getUsername());
+						.getCharacter(message.getUsername());
 				Optional<CharacterData> characterOpt = characterResp.get();
 				if (characterOpt.isPresent()) {
 
