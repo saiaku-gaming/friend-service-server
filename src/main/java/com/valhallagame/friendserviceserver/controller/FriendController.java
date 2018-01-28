@@ -29,8 +29,8 @@ import com.valhallagame.friendserviceclient.message.AcceptPersonInviteParameter;
 import com.valhallagame.friendserviceclient.message.DeclineCharacterParameter;
 import com.valhallagame.friendserviceclient.message.DeclinePersonInviteParameter;
 import com.valhallagame.friendserviceclient.message.GetFriendDataParameter;
-import com.valhallagame.friendserviceclient.message.InviteCharacterParameter;
-import com.valhallagame.friendserviceclient.message.InvitePersonParameter;
+import com.valhallagame.friendserviceclient.message.SendCharacterInviteParameter;
+import com.valhallagame.friendserviceclient.message.SendPersonInviteParameter;
 import com.valhallagame.friendserviceclient.message.RemoveCharacterFriendParameter;
 import com.valhallagame.friendserviceclient.message.RemovePersonFriendParameter;
 import com.valhallagame.friendserviceclient.model.FriendData;
@@ -68,7 +68,7 @@ public class FriendController {
 
 	@RequestMapping(path = "/send-person-invite", method = RequestMethod.POST)
 	@ResponseBody
-	public ResponseEntity<JsonNode> sendPersonInvite(@Valid @RequestBody InvitePersonParameter input)
+	public ResponseEntity<JsonNode> sendPersonInvite(@Valid @RequestBody SendPersonInviteParameter input)
 			throws IOException {
 
 		Optional<PersonData> targetPersonOpt = personServiceClient.getPerson(input.getTargetUsername()).getResponse();
@@ -138,15 +138,15 @@ public class FriendController {
 
 	@RequestMapping(path = "/send-character-invite", method = RequestMethod.POST)
 	@ResponseBody
-	public ResponseEntity<JsonNode> sendCharacterInvite(@Valid @RequestBody InviteCharacterParameter input)
+	public ResponseEntity<JsonNode> sendCharacterInvite(@Valid @RequestBody SendCharacterInviteParameter input)
 			throws IOException {
 		RestResponse<CharacterData> charResp = characterServiceClient
-				.getCharacter(input.getTargetCharacterName());
+				.getCharacter(input.getDisplayCharacterName().toLowerCase());
 		Optional<CharacterData> charOpt = charResp.get();
 		if (charOpt.isPresent()) {
 			CharacterData character = charOpt.get();
 			String ownerUsername = character.getOwnerUsername();
-			return sendPersonInvite(new InvitePersonParameter(input.getUsername(), ownerUsername));
+			return sendPersonInvite(new SendPersonInviteParameter(input.getUsername(), ownerUsername));
 		} else {
 			return JS.message(charResp);
 		}
@@ -187,7 +187,7 @@ public class FriendController {
 	public ResponseEntity<JsonNode> acceptCharacterInvite(@Valid @RequestBody AcceptCharacterInviteParameter input)
 			throws IOException {
 		RestResponse<CharacterData> charResp = characterServiceClient
-				.getCharacter(input.getTargetCharacterName());
+				.getCharacter(input.getDisplayCharacterName().toLowerCase());
 		Optional<CharacterData> characterOpt = charResp.get();
 		if (characterOpt.isPresent()) {
 			CharacterData character = characterOpt.get();
@@ -231,7 +231,7 @@ public class FriendController {
 	public ResponseEntity<JsonNode> declineCharacterInvite(@Valid @RequestBody DeclineCharacterParameter input)
 			throws IOException {
 		RestResponse<CharacterData> charResp = characterServiceClient
-				.getCharacter(input.getTargetCharacterName());
+				.getCharacter(input.getDisplayCharacterName().toLowerCase());
 		Optional<CharacterData> charOpt = charResp.get();
 		if (charOpt.isPresent()) {
 			CharacterData character = charOpt.get();
@@ -275,7 +275,7 @@ public class FriendController {
 	public ResponseEntity<JsonNode> removeCharacterFriend(@Valid @RequestBody RemoveCharacterFriendParameter input)
 			throws IOException {
 		RestResponse<CharacterData> charResp = characterServiceClient
-				.getCharacter(input.getTargetCharacterName());
+				.getCharacter(input.getDisplayCharacterName().toLowerCase());
 		Optional<CharacterData> characterOpt = charResp.get();
 		if (characterOpt.isPresent()) {
 			CharacterData character = characterOpt.get();
