@@ -63,6 +63,10 @@ public class FriendController {
 	public ResponseEntity<JsonNode> sendPersonInvite(@Valid @RequestBody SendPersonInviteParameter input)
 			throws IOException {
 
+        if (input.getUsername().equals(input.getTargetUsername())) {
+            return JS.message(HttpStatus.CONFLICT, "You are not your own friend and will never be!");
+        }
+
 		Optional<PersonData> targetPersonOpt = personServiceClient.getPerson(input.getTargetUsername()).getResponse();
 
 		if (!targetPersonOpt.isPresent()) {
