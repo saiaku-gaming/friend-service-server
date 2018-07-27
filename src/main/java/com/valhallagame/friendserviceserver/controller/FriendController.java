@@ -1,12 +1,22 @@
 package com.valhallagame.friendserviceserver.controller;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
-import javax.validation.Valid;
-
+import com.fasterxml.jackson.databind.JsonNode;
+import com.valhallagame.characterserviceclient.CharacterServiceClient;
+import com.valhallagame.characterserviceclient.model.CharacterData;
+import com.valhallagame.common.JS;
+import com.valhallagame.common.RestResponse;
+import com.valhallagame.common.rabbitmq.NotificationMessage;
+import com.valhallagame.common.rabbitmq.RabbitMQRouting;
+import com.valhallagame.friendserviceclient.message.*;
+import com.valhallagame.friendserviceclient.model.FriendData;
+import com.valhallagame.friendserviceclient.model.FriendsData;
+import com.valhallagame.friendserviceclient.model.InviteData;
+import com.valhallagame.friendserviceserver.model.Friend;
+import com.valhallagame.friendserviceserver.model.Invite;
+import com.valhallagame.friendserviceserver.service.FriendService;
+import com.valhallagame.friendserviceserver.service.InviteService;
+import com.valhallagame.personserviceclient.PersonServiceClient;
+import com.valhallagame.personserviceclient.model.PersonData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,31 +27,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.valhallagame.characterserviceclient.CharacterServiceClient;
-import com.valhallagame.characterserviceclient.model.CharacterData;
-import com.valhallagame.common.JS;
-import com.valhallagame.common.RestResponse;
-import com.valhallagame.common.rabbitmq.NotificationMessage;
-import com.valhallagame.common.rabbitmq.RabbitMQRouting;
-import com.valhallagame.friendserviceclient.message.AcceptCharacterInviteParameter;
-import com.valhallagame.friendserviceclient.message.AcceptPersonInviteParameter;
-import com.valhallagame.friendserviceclient.message.DeclineCharacterParameter;
-import com.valhallagame.friendserviceclient.message.DeclinePersonInviteParameter;
-import com.valhallagame.friendserviceclient.message.GetFriendDataParameter;
-import com.valhallagame.friendserviceclient.message.SendCharacterInviteParameter;
-import com.valhallagame.friendserviceclient.message.SendPersonInviteParameter;
-import com.valhallagame.friendserviceclient.message.RemoveCharacterFriendParameter;
-import com.valhallagame.friendserviceclient.message.RemovePersonFriendParameter;
-import com.valhallagame.friendserviceclient.model.FriendData;
-import com.valhallagame.friendserviceclient.model.FriendsData;
-import com.valhallagame.friendserviceclient.model.InviteData;
-import com.valhallagame.friendserviceserver.model.Friend;
-import com.valhallagame.friendserviceserver.model.Invite;
-import com.valhallagame.friendserviceserver.service.FriendService;
-import com.valhallagame.friendserviceserver.service.InviteService;
-import com.valhallagame.personserviceclient.PersonServiceClient;
-import com.valhallagame.personserviceclient.model.PersonData;
+import javax.transaction.Transactional;
+import javax.validation.Valid;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 @Controller
 @RequestMapping(path = "/v1/friend")
@@ -68,6 +59,7 @@ public class FriendController {
 
 	@RequestMapping(path = "/send-person-invite", method = RequestMethod.POST)
 	@ResponseBody
+	@Transactional
 	public ResponseEntity<JsonNode> sendPersonInvite(@Valid @RequestBody SendPersonInviteParameter input)
 			throws IOException {
 
