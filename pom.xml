@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>friend-service-server</artifactId>
-	<version>1.0-SNAPSHOT</version>
+	<version>1.0</version>
 	<packaging>jar</packaging>
 	<groupId>com.valhallagame.valhalla</groupId>
 
@@ -51,7 +51,7 @@
 		<dependency>
 			<groupId>com.valhallagame.valhalla</groupId>
 			<artifactId>common</artifactId>
-			<version>1.0-SNAPSHOT</version>
+			<version>1.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -69,17 +69,17 @@
 		<dependency>
 			<groupId>com.valhallagame.valhalla</groupId>
 			<artifactId>friend-service-client</artifactId>
-			<version>1.0-SNAPSHOT</version>
+			<version>1.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.valhallagame.valhalla</groupId>
 			<artifactId>character-service-client</artifactId>
-			<version>1.0-SNAPSHOT</version>
+			<version>1.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.valhallagame.valhalla</groupId>
 			<artifactId>person-service-client</artifactId>
-			<version>1.0-SNAPSHOT</version>
+			<version>1.0</version>
 		</dependency>
 		<dependency>
 		    <groupId>org.springframework.boot</groupId>
@@ -90,16 +90,21 @@
 	<build>
 		<plugins>
 			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
-				<executions>
-					<execution>
-						<goals>
-							<goal>repackage</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
+                <groupId>com.amashchenko.maven.plugin</groupId>
+                <artifactId>gitflow-maven-plugin</artifactId>
+                <version>1.10.0</version>
+            </plugin>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
 			<plugin>
 				<groupId>com.spotify</groupId>
 				<artifactId>docker-maven-plugin</artifactId>
@@ -111,7 +116,6 @@
 					<imageTags>
 						<imageTag>latest</imageTag>
 					</imageTags>
-					<useConfigFile>true</useConfigFile>
 					<baseImage>frolvlad/alpine-oraclejdk8:slim</baseImage>
 					<entryPoint>["java", "-Xmx256m", "-Xss512k", "-Xms32m", "-jar", "/${project.build.finalName}.jar"]</entryPoint>
 					<resources>
