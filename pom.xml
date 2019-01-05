@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>friend-service-server</artifactId>
-	<version>1.0</version>
+	<version>1.1</version>
 	<packaging>jar</packaging>
 	<groupId>com.valhallagame.valhalla</groupId>
 
@@ -19,6 +19,17 @@
 	<properties>
 		<docker.image.prefix>saiaku</docker.image.prefix>
 	</properties>
+
+	<repositories>
+		<repository>
+			<id>valhalla-release</id>
+			<url>https://artifactory.valhalla-game.com/libs-release</url>
+		</repository>
+		<repository>
+			<id>valhalla-snapshot</id>
+			<url>https://artifactory.valhalla-game.com/libs-snapshot</url>
+		</repository>
+	</repositories>
 
 	<dependencies>
 		<dependency>
@@ -51,7 +62,7 @@
 		<dependency>
 			<groupId>com.valhallagame.valhalla</groupId>
 			<artifactId>common</artifactId>
-			<version>1.0</version>
+            <version>1.7</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -69,17 +80,17 @@
 		<dependency>
 			<groupId>com.valhallagame.valhalla</groupId>
 			<artifactId>friend-service-client</artifactId>
-			<version>1.0</version>
+            <version>1.2</version>
 		</dependency>
 		<dependency>
 			<groupId>com.valhallagame.valhalla</groupId>
 			<artifactId>character-service-client</artifactId>
-			<version>1.0</version>
+            <version>1.4</version>
 		</dependency>
 		<dependency>
 			<groupId>com.valhallagame.valhalla</groupId>
 			<artifactId>person-service-client</artifactId>
-			<version>1.0</version>
+            <version>1.1</version>
 		</dependency>
 		<dependency>
 		    <groupId>org.springframework.boot</groupId>
