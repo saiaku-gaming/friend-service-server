@@ -1,16 +1,5 @@
 package com.valhallagame.friendserviceserver.rabbitmq;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Optional;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
 import com.valhallagame.characterserviceclient.CharacterServiceClient;
 import com.valhallagame.characterserviceclient.model.CharacterData;
 import com.valhallagame.common.RestResponse;
@@ -20,6 +9,16 @@ import com.valhallagame.friendserviceserver.model.Friend;
 import com.valhallagame.friendserviceserver.model.Invite;
 import com.valhallagame.friendserviceserver.service.FriendService;
 import com.valhallagame.friendserviceserver.service.InviteService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
 
 @Component
 public class FriendConsumer {
@@ -27,19 +26,20 @@ public class FriendConsumer {
 	private static final Logger logger = LoggerFactory.getLogger(FriendConsumer.class);
 
 	@Autowired
-	FriendService friendService;
+	private FriendService friendService;
 
 	@Autowired
-	InviteService inviteService;
+	private InviteService inviteService;
 
 	@Autowired
-	CharacterServiceClient characterServiceClient;
+	private CharacterServiceClient characterServiceClient;
 
 	@Autowired
 	private RabbitTemplate rabbitTemplate;
 
 	@RabbitListener(queues = "#{friendPersonDeleteQueue.name}")
 	public void receivePersonDelete(NotificationMessage message) {
+		logger.info("Received Person Delete with message [}", message);
 		List<Invite> sentInvites = inviteService.getSentInvites(message.getUsername());
 		sentInvites.forEach(i -> inviteService.deleteInvite(i));
 
@@ -57,6 +57,7 @@ public class FriendConsumer {
 
 	@RabbitListener(queues = "#{friendPersonOnlineQueue.name}")
 	public void receivePersonOnline(NotificationMessage message) {
+		logger.info("Received Person Online with message [}", message);
 		List<Friend> friends = friendService.getFriends(message.getUsername());
 		for (Friend friend : friends) {
 
@@ -84,6 +85,7 @@ public class FriendConsumer {
 
 	@RabbitListener(queues = "#{friendPersonOfflineQueue.name}")
 	public void receivePersonOffline(NotificationMessage message) {
+		logger.info("Received Person Offline with message [}", message);
 		List<Friend> friends = friendService.getFriends(message.getUsername());
 		for (Friend friend : friends) {
 

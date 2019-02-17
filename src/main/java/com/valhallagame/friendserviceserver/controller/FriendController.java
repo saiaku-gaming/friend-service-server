@@ -17,6 +17,8 @@ import com.valhallagame.friendserviceserver.service.FriendService;
 import com.valhallagame.friendserviceserver.service.InviteService;
 import com.valhallagame.personserviceclient.PersonServiceClient;
 import com.valhallagame.personserviceclient.model.PersonData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -38,8 +40,8 @@ import java.util.Optional;
 @RequestMapping(path = "/v1/friend")
 public class FriendController {
 
+	private static final Logger logger = LoggerFactory.getLogger(FriendController.class);
 	private static final String FRIEND_REQUEST_RECEIVED = "Friend request received";
-
 	private static final String COULD_NOT_FIND_PERSON_WITH_USERNAME = "Could not find person with username ";
 
 	@Autowired
@@ -62,7 +64,7 @@ public class FriendController {
 	@Transactional
 	public ResponseEntity<JsonNode> sendPersonInvite(@Valid @RequestBody SendPersonInviteParameter input)
 			throws IOException {
-
+		logger.info("Send Person Invite called with {}", input);
         if (input.getUsername().equals(input.getTargetUsername())) {
             return JS.message(HttpStatus.CONFLICT, "You are not your own friend and will never be!");
         }
@@ -136,6 +138,7 @@ public class FriendController {
 	@ResponseBody
 	public ResponseEntity<JsonNode> sendCharacterInvite(@Valid @RequestBody SendCharacterInviteParameter input)
 			throws IOException {
+		logger.info("Send Character Invite called with {}", input);
 		RestResponse<CharacterData> charResp = characterServiceClient
 				.getCharacter(input.getDisplayCharacterName().toLowerCase());
 		Optional<CharacterData> charOpt = charResp.get();
@@ -152,7 +155,7 @@ public class FriendController {
 	@ResponseBody
 	public ResponseEntity<JsonNode> acceptPersonInvite(@Valid @RequestBody AcceptPersonInviteParameter input)
 			throws IOException {
-
+		logger.info("Accept Person Invite called with {}", input);
 		if (!personServiceClient.getPerson(input.getTargetUsername()).isOk()) {
 			return JS.message(HttpStatus.NOT_FOUND, COULD_NOT_FIND_PERSON_WITH_USERNAME + input.getTargetUsername());
 		}
@@ -182,6 +185,7 @@ public class FriendController {
 	@ResponseBody
 	public ResponseEntity<JsonNode> acceptCharacterInvite(@Valid @RequestBody AcceptCharacterInviteParameter input)
 			throws IOException {
+		logger.info("Accept Character Invite called with {}", input);
 		RestResponse<CharacterData> charResp = characterServiceClient
 				.getCharacter(input.getDisplayCharacterName().toLowerCase());
 		Optional<CharacterData> characterOpt = charResp.get();
@@ -198,7 +202,7 @@ public class FriendController {
 	@ResponseBody
 	public ResponseEntity<JsonNode> declinePersonInvite(@Valid @RequestBody DeclinePersonInviteParameter input)
 			throws IOException {
-
+		logger.info("Decline Person Invite called with {}", input);
 		if (!personServiceClient.getPerson(input.getTargetUsername()).isOk()) {
 			return JS.message(HttpStatus.NOT_FOUND, COULD_NOT_FIND_PERSON_WITH_USERNAME + input.getTargetUsername());
 		}
@@ -226,6 +230,7 @@ public class FriendController {
 	@ResponseBody
 	public ResponseEntity<JsonNode> declineCharacterInvite(@Valid @RequestBody DeclineCharacterParameter input)
 			throws IOException {
+		logger.info("Decline Character Invite called with {}", input);
 		RestResponse<CharacterData> charResp = characterServiceClient
 				.getCharacter(input.getDisplayCharacterName().toLowerCase());
 		Optional<CharacterData> charOpt = charResp.get();
@@ -242,7 +247,7 @@ public class FriendController {
 	@ResponseBody
 	public ResponseEntity<JsonNode> removePersonFriend(@Valid @RequestBody RemovePersonFriendParameter input)
 			throws IOException {
-
+		logger.info("Remove Person Friend called with {}", input);
 		if (!personServiceClient.getPerson(input.getTargetUsername()).isOk()) {
 			return JS.message(HttpStatus.NOT_FOUND, COULD_NOT_FIND_PERSON_WITH_USERNAME + input.getTargetUsername());
 		}
@@ -270,6 +275,7 @@ public class FriendController {
 	@ResponseBody
 	public ResponseEntity<JsonNode> removeCharacterFriend(@Valid @RequestBody RemoveCharacterFriendParameter input)
 			throws IOException {
+		logger.info("Remove Character Friend called with {}", input);
 		RestResponse<CharacterData> charResp = characterServiceClient
 				.getCharacter(input.getDisplayCharacterName().toLowerCase());
 		Optional<CharacterData> characterOpt = charResp.get();
@@ -286,7 +292,7 @@ public class FriendController {
 	@RequestMapping(path = "/get-friend-data", method = RequestMethod.POST)
 	@ResponseBody
 	public ResponseEntity<JsonNode> getFriendData(@Valid @RequestBody GetFriendDataParameter input) throws IOException {
-
+		logger.info("Get Friend Data called with {}", input);
 		List<Friend> friends = friendService.getFriends(input.getUsername());
 
 		List<FriendData> friendData = convertToFriendData(friends);
