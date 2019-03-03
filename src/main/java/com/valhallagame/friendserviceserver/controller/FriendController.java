@@ -7,6 +7,7 @@ import com.valhallagame.common.JS;
 import com.valhallagame.common.RestResponse;
 import com.valhallagame.common.rabbitmq.NotificationMessage;
 import com.valhallagame.common.rabbitmq.RabbitMQRouting;
+import com.valhallagame.common.rabbitmq.RabbitSender;
 import com.valhallagame.friendserviceclient.message.*;
 import com.valhallagame.friendserviceclient.model.FriendData;
 import com.valhallagame.friendserviceclient.model.FriendsData;
@@ -19,7 +20,6 @@ import com.valhallagame.personserviceclient.PersonServiceClient;
 import com.valhallagame.personserviceclient.model.PersonData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -51,7 +51,7 @@ public class FriendController {
 	private PersonServiceClient personServiceClient;
 
 	@Autowired
-	private RabbitTemplate rabbitTemplate;
+	private RabbitSender rabbitSender;
 
 	@Autowired
 	private InviteService inviteService;
@@ -98,10 +98,10 @@ public class FriendController {
 			friendService.saveFriend(new Friend(input.getTargetUsername(), input.getUsername()));
 			friendService.saveFriend(new Friend(input.getUsername(), input.getTargetUsername()));
 
-			rabbitTemplate.convertAndSend(RabbitMQRouting.Exchange.FRIEND.name(), RabbitMQRouting.Friend.ADD.name(),
+			rabbitSender.sendMessage(RabbitMQRouting.Exchange.FRIEND, RabbitMQRouting.Friend.ADD.name(),
 					new NotificationMessage(input.getUsername(), FRIEND_REQUEST_RECEIVED));
 
-			rabbitTemplate.convertAndSend(RabbitMQRouting.Exchange.FRIEND.name(), RabbitMQRouting.Friend.ADD.name(),
+			rabbitSender.sendMessage(RabbitMQRouting.Exchange.FRIEND, RabbitMQRouting.Friend.ADD.name(),
 					new NotificationMessage(input.getTargetUsername(), FRIEND_REQUEST_RECEIVED));
 
 			return JS.message(HttpStatus.OK,
@@ -122,11 +122,11 @@ public class FriendController {
 
 			inviteService.saveInvite(new Invite(input.getTargetUsername(), input.getUsername()));
 
-			rabbitTemplate.convertAndSend(RabbitMQRouting.Exchange.FRIEND.name(),
+			rabbitSender.sendMessage(RabbitMQRouting.Exchange.FRIEND,
 					RabbitMQRouting.Friend.SENT_INVITE.name(),
 					new NotificationMessage(input.getUsername(), "Friend request sent"));
 
-			rabbitTemplate.convertAndSend(RabbitMQRouting.Exchange.FRIEND.name(),
+			rabbitSender.sendMessage(RabbitMQRouting.Exchange.FRIEND,
 					RabbitMQRouting.Friend.RECEIVED_INVITE.name(), receivedMessage);
 
 			return JS.message(HttpStatus.OK,
@@ -172,10 +172,10 @@ public class FriendController {
 		friendService.saveFriend(new Friend(input.getTargetUsername(), input.getUsername()));
 		friendService.saveFriend(new Friend(input.getUsername(), input.getTargetUsername()));
 
-		rabbitTemplate.convertAndSend(RabbitMQRouting.Exchange.FRIEND.name(), RabbitMQRouting.Friend.ADD.name(),
+		rabbitSender.sendMessage(RabbitMQRouting.Exchange.FRIEND, RabbitMQRouting.Friend.ADD.name(),
 				new NotificationMessage(input.getUsername(), "Accepted friend request"));
 
-		rabbitTemplate.convertAndSend(RabbitMQRouting.Exchange.FRIEND.name(), RabbitMQRouting.Friend.ADD.name(),
+		rabbitSender.sendMessage(RabbitMQRouting.Exchange.FRIEND, RabbitMQRouting.Friend.ADD.name(),
 				new NotificationMessage(input.getTargetUsername(), "Accepted friend request"));
 
 		return JS.message(HttpStatus.OK, "Friend request accepted");
@@ -217,10 +217,10 @@ public class FriendController {
 		inviteService.deleteInvite(optInvite.get());
 
 		String reason = "Declined friend request";
-		rabbitTemplate.convertAndSend(RabbitMQRouting.Exchange.FRIEND.name(),
+		rabbitSender.sendMessage(RabbitMQRouting.Exchange.FRIEND,
 				RabbitMQRouting.Friend.DECLINE_INVITE.name(), new NotificationMessage(input.getUsername(), reason));
 
-		rabbitTemplate.convertAndSend(RabbitMQRouting.Exchange.FRIEND.name(),
+		rabbitSender.sendMessage(RabbitMQRouting.Exchange.FRIEND,
 				RabbitMQRouting.Friend.DECLINE_INVITE.name(), new NotificationMessage(input.getTargetUsername(), reason));
 
 		return JS.message(HttpStatus.OK, "Friend request declined");
@@ -262,10 +262,10 @@ public class FriendController {
 		friendService.deleteFriend(optFriend2.get());
 
 		String reason = "Unfriend request";
-		rabbitTemplate.convertAndSend(RabbitMQRouting.Exchange.FRIEND.name(), RabbitMQRouting.Friend.REMOVE.name(),
+		rabbitSender.sendMessage(RabbitMQRouting.Exchange.FRIEND, RabbitMQRouting.Friend.REMOVE.name(),
 				new NotificationMessage(input.getUsername(), reason));
 
-		rabbitTemplate.convertAndSend(RabbitMQRouting.Exchange.FRIEND.name(), RabbitMQRouting.Friend.REMOVE.name(),
+		rabbitSender.sendMessage(RabbitMQRouting.Exchange.FRIEND, RabbitMQRouting.Friend.REMOVE.name(),
 				new NotificationMessage(input.getTargetUsername(), reason));
 
 		return JS.message(HttpStatus.OK, "Friend removed");

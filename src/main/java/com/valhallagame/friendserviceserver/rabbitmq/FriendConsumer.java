@@ -46,7 +46,7 @@ public class FriendConsumer {
 	@RabbitListener(queues = "#{friendPersonDeleteQueue.name}")
 	public void receivePersonDelete(NotificationMessage message) {
 		MDC.put("service_name", appName);
-		MDC.put("request_id", UUID.randomUUID().toString());
+		MDC.put("request_id", message.getData().get("requestId") != null ? (String)message.getData().get("requestId") : UUID.randomUUID().toString());
 
 		logger.info("Received Person Delete with message [}", message);
 
@@ -72,7 +72,7 @@ public class FriendConsumer {
 	@RabbitListener(queues = "#{friendPersonOnlineQueue.name}")
 	public void receivePersonOnline(NotificationMessage message) {
 		MDC.put("service_name", appName);
-		MDC.put("request_id", UUID.randomUUID().toString());
+		MDC.put("request_id", message.getData().get("requestId") != null ? (String)message.getData().get("requestId") : UUID.randomUUID().toString());
 
 		logger.info("Received Person Online with message [}", message);
 
@@ -108,7 +108,7 @@ public class FriendConsumer {
 	@RabbitListener(queues = "#{friendPersonOfflineQueue.name}")
 	public void receivePersonOffline(NotificationMessage message) {
 		MDC.put("service_name", appName);
-		MDC.put("request_id", UUID.randomUUID().toString());
+		MDC.put("request_id", message.getData().get("requestId") != null ? (String)message.getData().get("requestId") : UUID.randomUUID().toString());
 
 		logger.info("Received Person Offline with message [}", message);
 
