@@ -64,6 +64,8 @@ public class FriendConsumer {
 				friendService.deleteFriend(friend);
 			}
 			logger.info("deleted user: {}", message.getUsername());
+		} catch (Exception e) {
+			logger.error("Error while processing Person Delete notification", e);
 		} finally {
 			MDC.clear();
 		}
@@ -100,6 +102,8 @@ public class FriendConsumer {
 						notificationMessage);
 			}
 			logger.info("User is online: {}", message.getUsername());
+		} catch (Exception e) {
+			logger.error("Error while processing Person Online notification", e);
 		} finally {
 			MDC.clear();
 		}
@@ -136,6 +140,8 @@ public class FriendConsumer {
 						notificationMessage);
 			}
 			logger.info("User is offline: {}", message.getUsername());
+		} catch (Exception e) {
+			logger.error("Error while processing Person Offline notification", e);
 		} finally {
 			MDC.clear();
 		}
