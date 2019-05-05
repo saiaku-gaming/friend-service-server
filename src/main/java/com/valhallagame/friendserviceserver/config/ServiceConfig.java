@@ -12,13 +12,13 @@ import org.springframework.context.annotation.Profile;
 public class ServiceConfig {
 	@Bean
 	public CharacterServiceClient characterServiceClient() {
-		CharacterServiceClient.init("http://character-service.character-service:" + DefaultServicePortMappings.CHARACTER_SERVICE_PORT);
+		CharacterServiceClient.init("http://character-service:" + DefaultServicePortMappings.CHARACTER_SERVICE_PORT);
 		return CharacterServiceClient.get();
 	}
 
 	@Bean
 	public PersonServiceClient personServiceClient() {
-		PersonServiceClient.init("http://person-service.person-service:" + DefaultServicePortMappings.PERSON_SERVICE_PORT);
+		PersonServiceClient.init("http://person-service:" + DefaultServicePortMappings.PERSON_SERVICE_PORT);
 		return PersonServiceClient.get();
 	}
 }
