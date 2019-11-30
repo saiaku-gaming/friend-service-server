@@ -32,9 +32,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Controller
 @RequestMapping(path = "/v1/friend")
@@ -224,6 +222,46 @@ public class FriendController {
 				RabbitMQRouting.Friend.DECLINE_INVITE.name(), new NotificationMessage(input.getTargetUsername(), reason));
 
 		return JS.message(HttpStatus.OK, "Friend request declined");
+	}
+
+	@RequestMapping(path = "/cancel-character-invite", method = RequestMethod.POST)
+	@ResponseBody
+	public ResponseEntity<JsonNode> cancelCharacterInvite(@Valid @RequestBody CancelCharacterInviteParameter input)
+			throws IOException {
+		logger.info("Cancel Character Invite called with {}", input);
+		RestResponse<CharacterData> charResp = characterServiceClient
+				.getCharacter(input.getDisplayCharacterName().toLowerCase());
+		Optional<CharacterData> charOpt = charResp.get();
+
+		if (!charOpt.isPresent()) {
+			return JS.message(HttpStatus.NOT_FOUND, "character missing");
+		}
+
+		CharacterData character = charOpt.get();
+		String ownerUsername = character.getOwnerUsername();
+
+		Optional<Invite> optInvite = inviteService.getInviteFromReceiverAndSender(ownerUsername, input.getUsername());
+
+		if (!optInvite.isPresent()) {
+			return JS.message(HttpStatus.NOT_FOUND, "Could not find a friend request from the person");
+		}
+
+		inviteService.deleteInvite(optInvite.get());
+
+		String reason = "Canceled friend request";
+
+		Map<String, Object> data = new HashMap<>();
+		data.put("cancelerUsername", input.getUsername());
+		data.put("canceledUsername", ownerUsername);
+		data.put("canceledDisplayCharacterName", input.getDisplayCharacterName());
+
+		rabbitSender.sendMessage(RabbitMQRouting.Exchange.FRIEND,
+				RabbitMQRouting.Friend.CANCEL_INVITE.name(), new NotificationMessage(input.getUsername(), reason).withData(data));
+
+		rabbitSender.sendMessage(RabbitMQRouting.Exchange.FRIEND,
+				RabbitMQRouting.Friend.CANCEL_INVITE.name(), new NotificationMessage(ownerUsername, reason).withData(data));
+
+		return JS.message(HttpStatus.OK, "Friend request canceled");
 	}
 
 	@RequestMapping(path = "/decline-character-invite", method = RequestMethod.POST)
